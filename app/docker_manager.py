@@ -81,12 +81,21 @@ class DockerManager:
     
     def _update_compose_config(self, config: dict, env_vars: dict):
         """Update docker-compose configuration with environment variables"""
-        for service in config.get('services', {}).values():
-            if 'environment' not in service:
-                service['environment'] = {}
-            
-            # Update environment variables
-            service['environment'].update(env_vars)
+        for service_name, service in config.get('services', {}).items():
+            if 'environment' in service:
+                # If environment is a list, convert it to dict
+                if isinstance(service['environment'], list):
+                    env_dict = {}
+                    for env in service['environment']:
+                        if isinstance(env, str) and '=' in env:
+                            key, value = env.split('=', 1)
+                            env_dict[key] = value
+                    service['environment'] = env_dict
+                # Now we can update the environment
+                if isinstance(service['environment'], dict):
+                    service['environment'].update(env_vars)
+            else:
+                service['environment'] = env_vars.copy()
     
     async def cleanup_feature(self, branch: str):
         """Cleanup a feature environment"""

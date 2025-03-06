@@ -1,11 +1,15 @@
-from pydantic_settings import BaseSettings
+from pydantic import BaseModel
 from typing import Dict
+import os
+from dotenv import load_dotenv
 
-class Settings(BaseSettings):
-    GITHUB_SECRET: str = ""  # For webhook verification
-    DOCKER_REGISTRY: str = "rohittru"  # Docker Hub registry
-    BASE_DOMAIN: str = "stockBotWars.emerginary.com"
-    APP_NETWORK: str = "app-network"
+load_dotenv()
+
+class Settings(BaseModel):
+    GITHUB_SECRET: str = os.getenv("GITHUB_SECRET", "")
+    DOCKER_REGISTRY: str = os.getenv("DOCKER_REGISTRY", "rohittru")
+    BASE_DOMAIN: str = os.getenv("BASE_DOMAIN", "stockBotWars.emerginary.com")
+    APP_NETWORK: str = os.getenv("APP_NETWORK", "app-network")
     
     ENVIRONMENTS: Dict[str, str] = {
         "feature": "feature-{}.stockBotWars.emerginary.com",
@@ -15,12 +19,9 @@ class Settings(BaseSettings):
     
     # Docker compose template locations
     COMPOSE_TEMPLATES: Dict[str, str] = {
-        "feature": "templates/feature-compose.yml",
-        "staging": "templates/staging-compose.yml",
-        "production": "templates/prod-compose.yml"
+        "feature": "nginx/templates/feature-compose.yml",
+        "staging": "nginx/templates/staging-compose.yml",
+        "production": "nginx/templates/prod-compose.yml"
     }
-    
-    class Config:
-        env_file = ".env"
 
 settings = Settings() 
