@@ -1,0 +1,15 @@
+[Unit]
+Description=Deployment Service
+After=network.target
+
+[Service]
+User=ubuntu
+WorkingDirectory=/home/ubuntu/deployment_service
+Environment="PATH=/home/ubuntu/deployment_service/venv/bin"
+ExecStart=/home/ubuntu/deployment_service/venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 8000
+
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target 

@@ -1,0 +1,51 @@
+version: '3.8'
+
+networks:
+  app-network:
+    external: true
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: ${BRANCH}-mysql
+    networks:
+      - app-network
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpassword}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-app}
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  vectordb:
+    image: qdrant/qdrant:latest
+    container_name: ${BRANCH}-vectordb
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:6333/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    image: ${DOCKER_REGISTRY}/${REPO}:${BRANCH}
+    container_name: ${BRANCH}-app
+    networks:
+      - app-network
+    environment:
+      - DOMAIN=${DOMAIN}
+      - MYSQL_HOST=${BRANCH}-mysql
+      - VECTORDB_HOST=${BRANCH}-vectordb
+    depends_on:
+      mysql:
+        condition: service_healthy
+      vectordb:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3 
